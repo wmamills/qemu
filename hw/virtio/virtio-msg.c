@@ -20,6 +20,9 @@
 #include "qemu/log.h"
 #include "trace.h"
 
+/* this will work when virtqueues use PA */
+#define PEEK_PA 1
+
 #define TYPE_VIRTIO_MSG_IOMMU_MEMORY_REGION "virtio-msg-iommu-memory-region"
 
 static void virtio_msg_device_info(VirtIOMSGProxy *s,
@@ -198,6 +201,18 @@ static void virtio_msg_get_vqueue(VirtIOMSGProxy *s,
     virtio_msg_bus_send(&s->msg_bus, &msg_resp, NULL);
 }
 
+#ifdef PEEK_PA
+static uint64_t peek_pa(VirtIOMSGProxy *s, uint64_t pa) {
+    uint64_t buf[1];
+
+    buf[0] = 0xBAD1BAD1;
+
+    (void) address_space_rw(&s->dma_as, pa,  MEMTXATTRS_UNSPECIFIED, buf, sizeof(buf), false);
+
+    return buf[0];
+}
+#endif
+
 static void virtio_msg_set_vqueue(VirtIOMSGProxy *s,
                                   VirtIOMSG *msg)
 {
@@ -208,6 +223,13 @@ static void virtio_msg_set_vqueue(VirtIOMSGProxy *s,
                            msg->set_vqueue.descriptor_addr,
                            msg->set_vqueue.driver_addr,
                            msg->set_vqueue.device_addr);
+
+#ifdef PEEK_PA
+   printf("VQ set: data desc[0]=%08lx, drive[0]=%08lx, device[0]=%08lx\n",
+                           peek_pa(s, msg->set_vqueue.descriptor_addr),
+                           peek_pa(s, msg->set_vqueue.driver_addr),
+                           peek_pa(s, msg->set_vqueue.device_addr));
+#endif
 
     virtio_queue_set_num(vdev, msg->set_vqueue.index, msg->set_vqueue.size);
     virtio_queue_set_rings(vdev, msg->set_vqueue.index,
