@@ -70,6 +70,7 @@ static void virtio_msg_bus_ivshmem_process(VirtIOMSGBusDevice *bd) {
     do {
         r = spsc_recv(q, &msg, sizeof msg);
         if (r) {
+            printf("RX: "); virtio_msg_print(&msg);
             virtio_msg_bus_receive(bd, &msg);
         }
     } while (r);
@@ -98,6 +99,7 @@ static int virtio_msg_bus_ivshmem_send(VirtIOMSGBusDevice *bd, VirtIOMSG *msg_re
     spsc_queue *q_rx;
     bool sent;
     int i;
+    VirtIOMSG msg_print;
 
     q_tx = bd->peer->is_driver ? s->shm_queues.driver : s->shm_queues.device;
     q_rx = bd->peer->is_driver ? s->shm_queues.device : s->shm_queues.driver;
@@ -105,6 +107,10 @@ static int virtio_msg_bus_ivshmem_send(VirtIOMSGBusDevice *bd, VirtIOMSG *msg_re
     do {
         sent = spsc_send(q_tx, msg_req, sizeof *msg_req);
     } while (!sent);
+
+    msg_print = *msg_req;
+    virtio_msg_unpack(&msg_print);
+    printf("TX: "); virtio_msg_print(&msg_print);
 
     virtio_msg_bus_ivshmem_send_notify(s);
 

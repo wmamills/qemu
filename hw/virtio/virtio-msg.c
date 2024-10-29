@@ -106,7 +106,7 @@ static void virtio_msg_get_device_status(VirtIOMSGProxy *s,
     VirtIOMSG msg_resp;
 
     virtio_msg_pack_get_device_status_resp(&msg_resp, vdev->status);
-    virtio_msg_print(&msg_resp);
+    //virtio_msg_print(&msg_resp);
     virtio_msg_bus_send(&s->msg_bus, &msg_resp, NULL);
 }
 
@@ -202,6 +202,12 @@ static void virtio_msg_set_vqueue(VirtIOMSGProxy *s,
                                   VirtIOMSG *msg)
 {
     VirtIODevice *vdev = virtio_bus_get_device(&s->bus);
+
+    printf("VQ set: index=%d, desc_addr=%08lx, driver_addr=%08lx, device_addr=%08lx\n",
+                           msg->set_vqueue.index,
+                           msg->set_vqueue.descriptor_addr,
+                           msg->set_vqueue.driver_addr,
+                           msg->set_vqueue.device_addr);
 
     virtio_queue_set_num(vdev, msg->set_vqueue.index, msg->set_vqueue.size);
     virtio_queue_set_rings(vdev, msg->set_vqueue.index,
