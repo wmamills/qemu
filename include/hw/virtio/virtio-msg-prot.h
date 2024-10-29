@@ -588,6 +588,8 @@ static inline bool virtio_msg_is_resp(VirtIOMSG *msg_req, VirtIOMSG *msg_resp)
 static inline const char *virtio_msg_id_to_str(unsigned int type)
 {
 #define VIRTIO_MSG_TYPE2STR(x) [ VIRTIO_MSG_ ## x ] = stringify(x)
+    const char *str = NULL;
+
     static const char *type2str[VIRTIO_MSG_MAX + 1] = {
         VIRTIO_MSG_TYPE2STR(CONNECT),
         VIRTIO_MSG_TYPE2STR(DISCONNECT),
@@ -605,11 +607,15 @@ static inline const char *virtio_msg_id_to_str(unsigned int type)
         VIRTIO_MSG_TYPE2STR(EVENT_CONFIG),
         VIRTIO_MSG_TYPE2STR(EVENT_AVAIL),
         VIRTIO_MSG_TYPE2STR(EVENT_USED),
+        VIRTIO_MSG_TYPE2STR(IOMMU_ENABLE),
         VIRTIO_MSG_TYPE2STR(IOMMU_TRANSLATE),
         VIRTIO_MSG_TYPE2STR(IOMMU_INVALIDATE),
     };
 
-    return type2str[type];
+    if (type <= VIRTIO_MSG_MAX ) {
+        str = type2str[type];
+    }
+    return str ? str : "(unknown)";
 }
 
 static inline void virtio_msg_print_status(uint32_t status)
